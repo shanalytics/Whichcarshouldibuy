@@ -1,7 +1,6 @@
 # Whichcarshouldibuy
 An analysis of resale of cars. 
-file:///Users/violetmakena/Dropbox/Mac/Desktop/Data%20Science/Which%20car%20should%20i%20buy%20/whichcarshouldi-buy.html
-
+https://rpubs.com/Shanalytics/cartobuy
 
 https://public.tableau.com/views/Carsalesdistribution/Fueltypeandtransmissiondistribution?:language=en-US&:display_count=n&:origin=viz_share_link
 
