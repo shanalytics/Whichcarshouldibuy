@@ -1,0 +1,445 @@
+---
+title: "Which car should I buy?"
+author: "Makena Violet"
+date: "`r Sys.Date()`"
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Installing packages**
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(here)
+library(skimr)
+library(janitor)
+library(ggpubr)
+library(ggrepel)
+library(tidymodels)
+```
+
+```{r}
+setwd("~/Dropbox/Mac/Desktop/Data Science/Which car should i buy ")
+```
+
+```{r}
+load("car_data.RData")
+head(car_data)
+```
+
+Upon loading the data, our investigation will focus on analyzing the data properties and performing data cleaning procedures to achieve the most favorable outcome in order to derive optimal solutions.
+
+```{r}
+colnames(car_data)
+dim(car_data)
+```
+
+After looking at the dimensions, our data has 301 rows and 9 columns. Here is the inferred data type for each variable:
+
+1.  "Car_Name": Categorical data type representing the name of the car.
+
+2.  "Year": Numeric data type representing the manufacturing year of the car.
+
+3.  "Selling_Price": Numeric data type representing the selling price of the car.
+
+4.  "Present_Price": Numeric data type representing the present price or market value of the car.
+
+5.  "Kms_Driven": Numeric data type representing the number of kilometers driven by the car.
+
+6.  "Fuel_Type": Categorical data type representing the type of fuel used by the car.
+
+7.  "Seller_Type": Categorical data type representing the type of seller or dealership.
+
+8.  "Transmission": Categorical data type representing the type of transmission in the car.
+
+9.  "Owner": Categorical or ordinal data type representing the number of previous owners of the car.
+
+```{r}
+unique(car_data$Year)
+unique(car_data$Seller_Type)
+unique(car_data$Transmission)
+unique(car_data$Fuel_Type)
+unique(car_data$Owner)
+```
+
+The presented data depicts the distribution of car sale prices spanning from 2003 to 2017, with a focus on the prominent vendors in the market, classified based on their gearbox and fuel type. The focus of our analysis will be on the annual sales distribution and market performance of the presented vehicles.
+
+# **Data presentation**
+
+```{r}
+is.null(car_data)
+```
+
+no null figures
+
+```{r}
+# Check if all columns are of character type
+all_character <- sapply(car_data, is.character)
+all_character
+```
+
+# **Understanding the data**
+
+```{r}
+summary(car_data)
+```
+
+The provided description shows the summary statistics for each variable in the dataset:
+
+1.  Car_Name: This variable is of character data type. It has a length of 301, indicating there are 301 observations in the dataset. The variable shows the frequency count for each unique car name.
+
+2.  Year: This variable represents the year when the car was manufactured. It is of numeric data type. The summary statistics indicate the minimum year (2003), maximum year (2018), and quartiles (1st quartile: 2012, median: 2014, 3rd quartile: 2016).
+
+3.  Selling_Price: This variable represents the selling price of the car. It is of numeric data type. The summary statistics show the minimum selling price (0.100), maximum selling price (35.000), and quartiles (1st quartile: 0.900, median: 3.600, 3rd quartile: 6.000). The mean selling price is 4.661.
+
+4.  Present_Price: This variable represents the present price or current market value of the car. It is of numeric data type. The summary statistics display the minimum present price (0.320), maximum present price (92.600), and quartiles (1st quartile: 1.200, median: 6.400, 3rd quartile: 9.900). The mean present price is 7.628.
+
+5.  Kms_Driven: This variable represents the number of kilometers driven by the car. It is of numeric data type. The summary statistics indicate the minimum value (500), maximum value (500000), and quartiles (1st quartile: 15000, median: 32000, 3rd quartile: 48767). The mean number of kilometers driven is 36947.
+
+6.  Fuel_Type: This variable represents the type of fuel used by the car. It is of character data type. The summary statistics show the frequency count for each unique fuel type.
+
+7.  Seller_Type: This variable represents the type of seller or dealership from which the car is being sold. It is of character data type. The summary statistics display the frequency count for each unique seller type.
+
+8.  Transmission: This variable represents the type of transmission in the car. It is of character data type. The summary statistics show the frequency count for each unique transmission type.
+
+9.  Owner: This variable represents the number of previous owners of the car. It is of numeric data type. The summary statistics indicate the minimum number of owners (0), maximum number of owners (3), and quartiles (1st quartile: 0, median: 0, 3rd quartile: 0). The mean number of owners is 0.04319.
+
+# **Descriptive Analysis**
+
+```{r}
+library(Hmisc)#great for data description and interaction
+```
+
+```{r}
+describe(car_data$Car_Name)
+describe(car_data$Year)
+describe(car_data$Kms_Driven)
+describe(car_data$Fuel_Type)
+describe(car_data$Seller_Type)
+describe(car_data$Transmission)
+```
+
+```{r}
+# Calculate the frequency of each year
+year_counts <- table(car_data$Year)
+
+# Create a bar plot
+barplot(year_counts,
+        xlab = "Year",
+        ylab = "Frequency",
+        main = "Description of Year in car_data",
+        col = "lightyellow")
+
+# Calculate the frequency of each year
+year_counts <- table(car_data$Seller_Type)
+
+# Create a bar plot
+barplot(year_counts,
+        xlab = "Year",
+        ylab = "Frequency",
+        main = "Description of Year in car_data",
+        col = "yellow")
+
+```
+
+```{r}
+# Calculate the frequency of each year
+year_counts <- table(car_data$Fuel_Type)
+
+# Create a bar plot
+barplot(year_counts,
+        xlab = "Year",
+        ylab = "Frequency",
+        main = "Description of Year in car_data",
+        col = "magenta")
+
+
+# Calculate the frequency of each year
+year_counts <- table(car_data$Transmission)
+
+# Create a bar plot
+barplot(year_counts,
+        xlab = "Year",
+        ylab = "Frequency",
+        main = "Description of Year in car_data",
+        col = "pink")
+```
+
+```{r}
+
+# Calculate the frequency count of each car name
+car_freq <- car_data %>% count(Car_Name, sort = TRUE)
+
+# Select the top 10 most common car names
+top_10_cars <- head(car_freq, 10)
+
+# Create the plot
+ggplot(top_10_cars, aes(x = reorder(Car_Name, n), y = n)) +
+  geom_col(fill = "violet") +
+  geom_text(aes(label = n), vjust = -0.5, size = 4) +
+  labs(x = "Car Name", y = "Frequency Count", title = "Top 10 Most Common Car Names") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+print(top_10_cars)
+```
+
+```{r}
+# Calculate minimum and maximum values of Selling_Price column
+if (any(!is.na(car_data$Selling_Price))) {
+  min_value <- min(car_data$Selling_Price, na.rm = TRUE)
+  max_value <- max(car_data$Selling_Price, na.rm = TRUE)
+} else {
+  min_value <- NA
+  max_value <- NA
+}
+min_value
+max_value
+
+# Calculate minimum and maximum values of Selling_Price column
+if (any(!is.na(car_data$Selling_Price))) {
+  min_value <- min(car_data$Present_Price, na.rm = TRUE)
+  max_value <- max(car_data$Present_Price, na.rm = TRUE)
+} else {
+  min_value <- NA
+  max_value <- NA
+}
+min_value
+max_value
+```
+
+```{r}
+describe(car_data$Present_Price)
+```
+
+```{r}
+describe(car_data$Selling_Price)
+```
+
+```{r}
+library(ggplot2)#loading up visualisation package
+```
+
+```{r}
+# Create a box plot for Selling_Price
+ggplot(car_data, aes(x = "", y = Selling_Price)) +
+  geom_boxplot(fill="lightblue") +
+  labs(title = "Box Plot of Selling Price",
+       x = "",
+       y = "Selling Price")+
+  stat_summary(fun = mean, geom = "point", shape = 18, color = "darkred", size = 5) +
+  stat_summary(fun.data = function(y) {
+    median <- median(y)
+    q1 <- quantile(y, 0.25)
+    q3 <- quantile(y, 0.75)
+    data.frame(y = c(q1, median, q3), label = c("Q1", "Median", "Q3"))
+  }, geom = "text", vjust = -1, size = 3) +
+  theme_minimal()
+
+#present price
+# Create a box plot for Present_Price
+ggplot(car_data, aes(x = "", y = Present_Price)) +
+  geom_boxplot(fill="red") +
+  labs(title = "Box Plot of Present Price",
+       x = "",
+       y = "Present Price")+
+  stat_summary(fun = mean, geom = "point", shape = 18, color = "white", size = 5) +
+  stat_summary(fun.data = function(y) {
+    median <- median(y)
+    q1 <- quantile(y, 0.25)
+    q3 <- quantile(y, 0.75)
+    data.frame(y = c(q1, median, q3), label = c("Q1", "Median", "Q3"))
+  }, geom = "text", vjust = -0.8, size = 3) +
+  theme_minimal()
+
+# Create a box plot for Kms_driven
+ggplot(car_data, aes(x = "", y = Kms_Driven)) +
+  geom_boxplot(fill="gray") +
+  labs(title = "Box Plot of Kms_Driven",
+       x = "",
+       y = "Kms_Driven")+
+  stat_summary(fun = mean, geom = "point", shape = 18, color = "red", size = 4) +
+  stat_summary(fun.data = function(y) {
+    median <- median(y)
+    q1 <- quantile(y, 0.25)
+    q3 <- quantile(y, 0.75)
+    data.frame(y = c(q1, median, q3), label = c("Q1", "Median", "Q3"))
+  }, geom = "text", vjust = -0.8, size = 3) +
+  theme_minimal()
+```
+
+```{r}
+# Compute correlation matrix
+cor_matrix <- cor(car_data$Selling_Price, car_data$Present_Price)
+
+cor_matrix
+# Create heatmap
+# Create scatter plot
+plot(car_data$Present_Price, car_data$Selling_Price,
+     main = "Scatter Plot: Selling Price vs Present Price",
+     xlab = "Present Price",
+     ylab = "Selling Price",
+     pch = 16,
+     col = "blue")
+
+# Add gridlines
+grid()
+
+# Add a regression line
+abline(lm(Selling_Price ~ Present_Price, data = car_data), col = "red")
+
+```
+
+```{r}
+# Select relevant variables for correlation analysis
+selected_vars <- c("Selling_Price", "Present_Price", "Kms_Driven")
+
+# Compute correlation matrix
+correlation_matrix <- cor(car_data[selected_vars])
+
+correlation_matrix
+
+# Create heatmap with labels and correct sizes
+heatmap(correlation_matrix,
+        col = colorRampPalette(c("blue", "white", "orange"))(100),
+        scale = "none",
+        main = "Correlation Heatmap: Selling Price, Present Price, Kms Driven",
+        labRow = selected_vars,
+        labCol = selected_vars,
+        cexRow = 0.8,  # Adjust the size of row labels
+        cexCol = 0.8)  # Adjust the size of column labelsxlab = "Variables",
+
+```
+
+The correlation data provided shows the correlation coefficients between the variables Selling_Price, Present_Price, and Kms_Driven. Here's a description of the correlation data:
+
+-   Selling_Price vs. Selling_Price: The correlation coefficient between Selling_Price and itself is 1. This indicates a perfect positive correlation since it is the correlation of the variable with itself.
+
+-   Selling_Price vs. Present_Price: The correlation coefficient between Selling_Price and Present_Price is 0.8789825. This indicates a strong positive correlation between the two variables. As Selling_Price increases, Present_Price tends to increase as well.
+
+-   Selling_Price vs. Kms_Driven: The correlation coefficient between Selling_Price and Kms_Driven is 0.02918709. This indicates a very weak positive correlation between the two variables. There is little to no linear relationship between Selling_Price and Kms_Driven.
+
+-   Present_Price vs. Present_Price: The correlation coefficient between Present_Price and itself is 1. This indicates a perfect positive correlation since it is the correlation of the variable with itself.
+
+-   Present_Price vs. Kms_Driven: The correlation coefficient between Present_Price and Kms_Driven is 0.20364703. This indicates a weak positive correlation between the two variables. As Present_Price increases, Kms_Driven tends to increase, but the relationship is not very strong.
+
+-   Kms_Driven vs. Kms_Driven: The correlation coefficient between Kms_Driven and itself is 1. This indicates a perfect positive correlation since it is the correlation of the variable with itself.
+
+In summary, Selling_Price and Present_Price have a strong positive correlation, while Selling_Price and Kms_Driven have a very weak positive correlation. Present_Price and Kms_Driven also have a weak positive correlation.
+
+# **Plot the data**
+
+```{r}
+
+# Create a bar plot with fitted scale
+ggplot(car_data, aes(x = Year, y = Selling_Price, fill = Fuel_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Selling Price", title = "Number of Yearly Sales") +
+  theme(axis.text.x = element_text(angle = 0)) +
+  scale_fill_manual(values = c("darkblue", "darkred", "darkgreen")) +
+  coord_cartesian(ylim = c(0, max(car_data$Selling_Price, na.rm = TRUE)))
+ # Fit the scale
+
+ggplot(car_data, aes(x = Year, y = Present_Price, fill = Fuel_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Present Price", title = "Number of Yearly Sales") +
+  theme(axis.text.x = element_text(angle = 0)) +
+  scale_fill_manual(values = c("darkblue", "darkred", "darkgreen")) +
+  coord_cartesian(ylim = c(0, max(car_data$Selling_Price, na.rm = TRUE)))
+ # Fit the scale
+```
+
+```{r}
+library(dplyr)
+
+filtered_data <- car_data %>%
+  group_by(Year) %>%
+  filter(n() >= 2)  # Filter groups with at least two data points
+
+ggplot(filtered_data, aes(x = Year, y = Selling_Price, fill = "Selling Price")) +
+  geom_violin(width = 0.6, fill = "darkred", alpha = 0.7) +
+  geom_violin(aes(y = Present_Price, fill = "Present Price"), width = 0.6, fill = "lightyellow", alpha = 0.7) +
+  labs(x = "Year", y = "Price", title = "Selling Price and Present Price over the Years") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+```
+
+```{r}
+ggplot(car_data, aes(x = Year, y = Present_Price, fill = Fuel_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Present Price", title = "Number of Yearly Sales") +
+  theme(axis.text.x = element_text(angle = 0)) +
+  scale_fill_manual(values = c("blue", "red", "darkgreen")) +
+  coord_cartesian(ylim = c(0, max(car_data$Selling_Price, na.rm = TRUE)))
+ # Fit the scale
+```
+
+**Prediction**
+
+```{r}
+# Fit linear regression model
+lm_model <- lm(Present_Price ~ Selling_Price, data = car_data)
+
+# Predict present prices
+predicted_prices <- predict(lm_model, newdata = car_data)
+summary(predicted_prices)
+```
+
+The output you provided shows the summary statistics of the predicted prices based on the linear regression model. Here's what each statistic represents:
+
+Min: The minimum predicted price. 1st Qu.: The value below which 25% of the predicted prices fall. This is the first quartile. Median: The median predicted price, which represents the middle value of the distribution. 50% of the predicted prices are below this value. Mean: The average predicted price, calculated as the sum of all predicted prices divided by the number of predictions. 3rd Qu.: The value below which 75% of the predicted prices fall. This is the third quartile. Max: The maximum predicted price.
+
+```{r}
+# Create a scatter plot with regression line
+ggplot(car_data, aes(x = Selling_Price, y = Present_Price)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(x = "Selling Price", y = "Present Price", title = "Linear Regression: Present Price vs Selling Price") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14))
+
+```
+
+In this code, we first fit a linear regression model using the lm() function, with Present_Price as the response variable and Selling_Price as the predictor variable. We then use the predict() function to obtain the predicted present prices based on the model.
+
+Next, we create a scatter plot of the actual present prices (Present_Price) against the selling prices (Selling_Price) using geom_point(). We add a regression line to the plot using geom_smooth() with method = "lm" to indicate linear regression. The se = FALSE argument is used to suppress the display of the standard error band around the regression line.
+
+Finally, we add labels and adjust the theme settings to customize the plot appearance.
+
+```{r}
+# Calculate residuals
+residuals <- car_data$Present_Price - predicted_prices
+# Create a residual plot
+plot(predicted_prices, residuals, xlab = "Predicted Prices", ylab = "Residuals", main = "Residual Plot")
+abline(h = 0, col = "red")  # Add a horizontal line at y = 0
+
+```
+
+```{r}
+describe(residuals)
+```
+
+![Car](https://www.google.com/url?sa=i&url=https%253A%252F%252Fwww.porsche.com%252Faustralia%252F&psig=AOvVaw0LfsdhaCG_DBqoWWv-E9HV&ust=1684507882990000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCJjRgIKP__4CFQAAAAAdAAAAABAT)
+
+This data represents summary statistics for the residuals in a simple and understandable way:
+
+-   `n`: Indicates the total number of observations, which is 301 in this case.
+-   `missing`: Represents the number of missing values, which is 0. This means there are no missing values in the residuals.
+-   `distinct`: Refers to the number of distinct or unique values in the residuals. In this case, there are 285 distinct values.
+-   `Info`: Represents the amount of information or uniqueness in the residuals. A value of 1 means all the residuals have unique values.
+-   `Mean`: Represents the average value of the residuals, which is very close to zero (-5.542e-15). This suggests that, on average, the residuals are centered around zero.
+-   `Gmd`: Represents the median absolute deviation from the median. It is a measure of dispersion or spread of the residuals. In this case, it is 3.4, indicating a moderate spread.
+-   `.05`, `.10`, `.25`, `.50`, `.75`, `.90`, `.95`: These values represent percentiles of the residuals. For example, `.25` represents the 25th percentile or the lower quartile, and `.75` represents the 75th percentile or the upper quartile. These percentiles provide information about the distribution of the residuals.
+-   `lowest` and `highest`: These values represent the minimum and maximum values in the residuals, respectively. The lowest value is -13.7605, and the highest value is 39.6198, indicating the range of the residuals.
+
+In simpler terms, the summary statistics show that the residuals have a relatively normal distribution around zero, with some variability. The minimum and maximum values show the range of the residuals, indicating the extent of deviations from the predicted values.
